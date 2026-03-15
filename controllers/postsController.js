@@ -6,32 +6,30 @@ const postsController = {
     store,
     update,
     modify,
-    destroy
-}
+    destroy,
+};
 
 // le funzioni delle operazioni CRUD sono gestite dal controller per scremare il router e l'index.js
 // tutto è centralizzato meglio e il codice risulta più pulito
 
 function index(req, res) {
-    const sqlQuery = 'SELECT * FROM posts'
+    const sqlQuery = "SELECT * FROM posts";
 
     db.query(sqlQuery, (err, results) => {
-        if (err) return res.status(500).json({error: "Query failed"})
+        if (err) return res.status(500).json({ error: "Query failed" });
         res.status(200).json(results);
-    })
+    });
 }
 
 function show(req, res) {
     const post = posts.find((post) => post.id == req.params.id);
     if (isNaN(req.params.id) || !post) {
-        res.status(404)
-        
-        return res.json(
-            {
-                error: "Not Found",
-                message: `Id "${req.params.id}" is not valid, no such post exists`,
-            }
-        );
+        res.status(404);
+
+        return res.json({
+            error: "Not Found",
+            message: `Id "${req.params.id}" is not valid, no such post exists`,
+        });
     } else {
         res.json(posts.find((post) => post.id == req.params.id));
     }
@@ -44,46 +42,45 @@ function store(req, res) {
         if (post.id > newId) {
             newId = post.id;
         }
-        });
-      
+    });
+
     // crea il nuovo post con i dati ricevuti dalla req
     const newPost = {
         id: newId + 1,
         title: req.body.name,
         content: req.body.content,
         image: req.body.image,
-        tags: req.body.tags
+        tags: req.body.tags,
     };
-    
+
     // pusha il nuovo post nell'array di post
     posts.push(newPost);
-    
+
     res.status(201);
     res.json(newPost);
 }
 
 function update(req, res) {
     const id = parseInt(req.params.id);
-    const post = posts.find(post => post.id === id);
+    const post = posts.find((post) => post.id === id);
     console.log(post);
-    
+
     const title = req.body.title;
     const content = req.body.content;
     const image = req.body.image;
     const tags = req.body.tags;
 
-    if(!post) {
+    if (!post) {
         res.status(404);
         return res.json({
             error: "Not Found",
-            message: "No post with such id exists"
-        })
+            message: "No post with such id exists",
+        });
     }
 
-    posts[id-1] = {...posts[id-1], title, content, image, tags};
+    posts[id - 1] = { ...posts[id - 1], title, content, image, tags };
 
-
-    res.send(posts[id-1]);
+    res.send(posts[id - 1]);
 }
 
 function modify(req, res) {
@@ -91,25 +88,27 @@ function modify(req, res) {
 }
 
 function destroy(req, res) {
-    const postToDelete = posts.find((post) => post.id == req.params.id);
+    // id del post da eliminare
+    const id = req.params.id
+
     // se viene passato un id che non è un num o non esiste un post con
     // l'id specificato restituisce un errore
-    if (isNaN(req.params.id) || !postToDelete) {
-        res.status(404)
-        
-        return res.json(
-            {
-                status: 404,
-                error: "Not found",
-                message: `Error: post doesnt exist or bad id "${req.params.id}"`,
-            }
-        );
-        // se il post esiste lo elimina dall'array dei post e restituire status ok
-    } else {
-        const indexOfPost = posts.indexOf(postToDelete);
-        posts.splice(indexOfPost, 1);
-        res.sendStatus(204);
+    if (isNaN(req.params.id)) {
+        res.status(404);
+        return res.json({
+            status: 404,
+            error: "Not found",
+            message: `Error: post doesnt exist or bad id "${req.params.id}"`,
+        });
     }
+
+    const sqlQuery = 'DELETE FROM posts WHERE id = ?';
+
+    // se il post esiste lo elimina
+    db.query(sqlQuery, [id], (err, results) => {
+        if (err) return res.status(500).json({ error: "Couldn't delete post" });
+        res.sendStatus(204);
+    });
 }
 
 module.exports = postsController;
