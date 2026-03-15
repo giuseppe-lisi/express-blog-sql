@@ -1,3 +1,4 @@
+const connection = require("../data/db.js");
 const db = require("../data/db.js");
 
 const postsController = {
@@ -22,17 +23,25 @@ function index(req, res) {
 }
 
 function show(req, res) {
-    const post = posts.find((post) => post.id == req.params.id);
-    if (isNaN(req.params.id) || !post) {
-        res.status(404);
+    // id post da mostrare
+    const id = req.params.id;
 
-        return res.json({
+    if (isNaN(req.params.id)) {
+        return res.status(404).json({
             error: "Not Found",
-            message: `Id "${req.params.id}" is not valid, no such post exists`,
+            message: `Id "${id}" is not valid, no such post exists`,
         });
-    } else {
-        res.json(posts.find((post) => post.id == req.params.id));
     }
+
+    const sqlQuery = "SELECT * FROM posts WHERE id = ?";
+
+    db.query(sqlQuery, [id], (err, results) => {
+        if (err)
+            return res
+                .status(500)
+                .json({ error: `Error fetching post with id: ${id}` });
+        res.json(results);
+    });
 }
 
 function store(req, res) {
@@ -89,7 +98,7 @@ function modify(req, res) {
 
 function destroy(req, res) {
     // id del post da eliminare
-    const id = req.params.id
+    const id = req.params.id;
 
     // se viene passato un id che non è un num o non esiste un post con
     // l'id specificato restituisce un errore
@@ -102,7 +111,7 @@ function destroy(req, res) {
         });
     }
 
-    const sqlQuery = 'DELETE FROM posts WHERE id = ?';
+    const sqlQuery = "DELETE FROM posts WHERE id = ?";
 
     // se il post esiste lo elimina
     db.query(sqlQuery, [id], (err, results) => {
