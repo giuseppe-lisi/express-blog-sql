@@ -1,4 +1,4 @@
-const posts = require("../data/postsData.js");
+const db = require("../data/db.js");
 
 const postsController = {
     index,
@@ -13,27 +13,12 @@ const postsController = {
 // tutto è centralizzato meglio e il codice risulta più pulito
 
 function index(req, res) {
-    const search = req.query.search;
-    const tag = req.query.tags;
-    // filtra contemporaneamente per tag e ricerca del titolo
-    // restituisce tutti i post nel caso in cui non venga applicato nessun filtro
-    const postsToShow = posts.filter((post) => {
-        // filtro per tag
-        if (tag) {
-            const postTags = post.tags.map((postTag) => postTag.toLowerCase());
-            // se il tag non è presente stoppa subito il filtro e il post non viene restituito
-            if (!postTags.includes(tag)) return false;
-        }
-        // filtro per titolo
-        if (search) {
-            // se la ricerca non corriposnde con il titolo di nessun post allo questo non viene restituito
-            if (!post.title.toLowerCase().includes(search)) return false;
-        }
-        // restituisce il post se ha passato entrambi i check di filtro
-        return true;
-    });
+    const sqlQuery = 'SELECT * FROM posts'
 
-    res.json(postsToShow);
+    db.query(sqlQuery, (err, results) => {
+        if (err) return res.status(500).json({error: "Query failed"})
+        res.status(200).json(results);
+    })
 }
 
 function show(req, res) {
