@@ -40,7 +40,8 @@ function show(req, res) {
             return res
                 .status(500)
                 .json({ error: `Error fetching post with id: ${id}` });
-        res.json(results);
+        
+        res.json(results[0]);
     });
 }
 
