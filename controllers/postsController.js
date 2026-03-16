@@ -40,7 +40,14 @@ function show(req, res) {
             return res
                 .status(500)
                 .json({ error: `Error fetching post with id: ${id}` });
-        
+        if (results.length === 0) {
+            return res
+                .status(404)
+                .json({
+                    error: "Not found",
+                    message: "Il post da eliminare non è stato trovato",
+                });
+        }
         res.json(results[0]);
     });
 }
