@@ -113,26 +113,43 @@ function store(req, res) {
 }
 
 function update(req, res) {
-    const id = parseInt(req.params.id);
-    const post = posts.find((post) => post.id === id);
-    console.log(post);
+    // recupero l'id del post di cui fare l'update
+    const id = req.params.id;
 
-    const title = req.body.title;
-    const content = req.body.content;
-    const image = req.body.image;
-    const tags = req.body.tags;
-
-    if (!post) {
-        res.status(404);
-        return res.json({
-            error: "Not Found",
-            message: "No post with such id exists",
+    // controlla che venga inserito un titolo per il post
+    if (!req.body.title) {
+        return res.status(403).json({
+            error: "Bad request",
+            message: "The post has to have a title",
         });
     }
+    
+    // destrutturo i dati dell'oggetto ricevuti nel request body
+    const { title, content, image } = req.body;
 
-    posts[id - 1] = { ...posts[id - 1], title, content, image, tags };
+    // prepared statements
+    const sqlQueryUpdatePost = `
+        UPDATE posts
+        SET title = ?, content = ?, image = ? 
+        WHERE id = ?`;
 
-    res.send(posts[id - 1]);
+    const sqlQueryShowUpdate = `
+        SELECT *
+        FROM posts
+        WHERE posts.id = ?`
+
+    // update post nel db
+    db.query(sqlQueryUpdatePost, [title, content, image, id], (err, results) => {
+        if (err) return res.status(500).json({error: "Query failed", message: "Unable to update post"});
+
+        // mostra il post con update
+        db.query(sqlQueryShowUpdate, [id], (err, results) => {
+            res.status(201).json({
+                message: "Post updated successfully",
+                post: results
+            });
+        }); 
+    });
 }
 
 function modify(req, res) {
