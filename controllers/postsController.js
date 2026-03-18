@@ -64,7 +64,7 @@ function show(req, res) {
                         error: "Query failed",
                         message: "Couldn't find tags",
             });
-            post.tags = results;
+            post.tags = results.map((tag) => tag.label);
             res.json(post);
         });
     });
