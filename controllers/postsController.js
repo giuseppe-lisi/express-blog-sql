@@ -58,12 +58,10 @@ function show(req, res) {
 
         db.query(sqlQueryTags, [post.id], (err, results) => {
             if (err)
-                return res
-                    .status(500)
-                    .json({
-                        error: "Query failed",
-                        message: "Couldn't find tags",
-            });
+                return res.status(500).json({
+                    error: "Query failed",
+                    message: "Couldn't find tags",
+                });
             post.tags = results.map((tag) => tag.label);
             res.json(post);
         });
@@ -71,21 +69,23 @@ function show(req, res) {
 }
 
 function store(req, res) {
+    // ci aspettiamo che l'utente ci invii questi dati nella sua req
+    if (req.body.id) {
+        return res
+            .status(403)
+            .json({
+                error: "Bad request",
+                message: "You can't manually add IDs",
+            });
+    }
 
-    // crea il nuovo post con i dati ricevuti dalla req
-    const newPost = {
-        id: newId + 1,
-        title: req.body.name,
-        content: req.body.content,
-        image: req.body.image,
-        tags: req.body.tags,
-    };
+    const { title, content, image } = req.body;
 
-    // pusha il nuovo post nell'array di post
-    posts.push(newPost);
+    const sqlQuery =
+        "INSERT INTO posts (title, content, image) VALUES (?, ?, ?)";
 
-    res.status(201);
-    res.json(newPost);
+    // db.query(sqlQuery, [title, content, image]);
+    res.json(req.body);
 }
 
 function update(req, res) {
