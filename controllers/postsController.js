@@ -98,17 +98,23 @@ function store(req, res) {
         FROM posts
         WHERE posts.title = ?`;
 
-    // query per aggiungere il post al db 
+    // query per aggiungere il post al db
     db.query(sqlQuery, [title, content, image], (err, results) => {
-        if (err) return res.status(500).json({error: "Query failed", message: "Unable to add new post"});
+        if (err)
+            return res
+                .status(500)
+                .json({
+                    error: "Query failed",
+                    message: "Unable to add new post",
+                });
 
-        // restituisce il post appena creato se viene creato 
+        // restituisce il post appena creato se viene creato
         db.query(sqlQueryAddedPost, [title], (err, results) => {
             res.status(201).json({
                 message: "Post created successfully",
-                post: results
+                post: results,
             });
-        }); 
+        });
     });
 }
 
@@ -123,7 +129,7 @@ function update(req, res) {
             message: "The post has to have a title",
         });
     }
-    
+
     // destrutturo i dati dell'oggetto ricevuti nel request body
     const { title, content, image } = req.body;
 
@@ -136,20 +142,30 @@ function update(req, res) {
     const sqlQueryShowUpdate = `
         SELECT *
         FROM posts
-        WHERE posts.id = ?`
+        WHERE posts.id = ?`;
 
     // update post nel db
-    db.query(sqlQueryUpdatePost, [title, content, image, id], (err, results) => {
-        if (err) return res.status(500).json({error: "Query failed", message: "Unable to update post"});
+    db.query(
+        sqlQueryUpdatePost,
+        [title, content, image, id],
+        (err, results) => {
+            if (err)
+                return res
+                    .status(500)
+                    .json({
+                        error: "Query failed",
+                        message: "Unable to update post",
+                    });
 
-        // mostra il post con update
-        db.query(sqlQueryShowUpdate, [id], (err, results) => {
-            res.status(201).json({
-                message: "Post updated successfully",
-                post: results
+            // mostra il post con update
+            db.query(sqlQueryShowUpdate, [id], (err, results) => {
+                res.status(201).json({
+                    message: "Post updated successfully",
+                    post: results,
+                });
             });
-        }); 
-    });
+        },
+    );
 }
 
 function modify(req, res) {
@@ -176,6 +192,13 @@ function destroy(req, res) {
     // se il post esiste lo elimina
     db.query(sqlQuery, [id], (err, results) => {
         if (err) return res.status(500).json({ error: "Couldn't delete post" });
+        if (results.affectedRows === 0)
+            return res
+                .status(404)
+                .json({
+                    error: "Couldn't delete post",
+                    message: `The post with id: ${id} couldn't be found`
+                });
         res.sendStatus(204);
     });
 }
