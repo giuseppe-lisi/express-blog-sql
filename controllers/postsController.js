@@ -33,22 +33,40 @@ function show(req, res) {
         });
     }
 
-    const sqlQuery = "SELECT * FROM posts WHERE id = ?";
+    const sqlQueryPost = "SELECT * FROM posts WHERE id = ?";
+    const sqlQueryTags = `
+        SELECT * 
+        FROM post_tag
+        JOIN tags
+        ON post_tag.tag_id = tags.id
+        WHERE post_tag.post_id = ?`;
 
-    db.query(sqlQuery, [id], (err, results) => {
-        if (err)
+    db.query(sqlQueryPost, [id], (err, postResults) => {
+        if (err) {
             return res
                 .status(500)
                 .json({ error: `Error fetching post with id: ${id}` });
-        if (results.length === 0) {
-            return res
-                .status(404)
-                .json({
-                    error: "Not found",
-                    message: "Il post da eliminare non è stato trovato",
-                });
         }
-        res.json(results[0]);
+        if (postResults.length === 0) {
+            return res.status(404).json({
+                error: "Not found",
+                message: "Il post da mostrare non è stato trovato",
+            });
+        }
+        const post = postResults[0];
+        console.log(post);
+
+        db.query(sqlQueryTags, [post.id], (err, results) => {
+            if (err)
+                return res
+                    .status(500)
+                    .json({
+                        error: "Query failed",
+                        message: "Couldn't find tags",
+            });
+            post.tags = results;
+            res.json(post);
+        });
     });
 }
 
