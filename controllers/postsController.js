@@ -71,13 +71,6 @@ function show(req, res) {
 }
 
 function store(req, res) {
-    // crea id in base all'id dell'ultimo elemento dell'array di post
-    let newId = 0;
-    posts.forEach((post, i) => {
-        if (post.id > newId) {
-            newId = post.id;
-        }
-    });
 
     // crea il nuovo post con i dati ricevuti dalla req
     const newPost = {
