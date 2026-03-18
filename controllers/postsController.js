@@ -71,21 +71,45 @@ function show(req, res) {
 function store(req, res) {
     // ci aspettiamo che l'utente ci invii questi dati nella sua req
     if (req.body.id) {
-        return res
-            .status(403)
-            .json({
-                error: "Bad request",
-                message: "You can't manually add IDs",
-            });
+        return res.status(403).json({
+            error: "Bad request",
+            message: "You can't manually add IDs",
+        });
+    }
+    // controlla che venga inserito un titolo per il post
+    if (!req.body.title) {
+        return res.status(403).json({
+            error: "Bad request",
+            message: "The post has to have a title",
+        });
     }
 
+    // destrutturo i dati dell'oggetto ricevuti nel request body
     const { title, content, image } = req.body;
 
-    const sqlQuery =
-        "INSERT INTO posts (title, content, image) VALUES (?, ?, ?)";
+    // prepared statement
+    const sqlQuery = `
+        INSERT 
+        INTO posts (title, content, image) 
+        VALUES (?, ?, ?)`;
 
-    // db.query(sqlQuery, [title, content, image]);
-    res.json(req.body);
+    const sqlQueryAddedPost = `
+        SELECT *
+        FROM posts
+        WHERE posts.title = ?`;
+
+    // query per aggiungere il post al db 
+    db.query(sqlQuery, [title, content, image], (err, results) => {
+        if (err) return res.status(500).json({error: "Query failed", message: "Unable to add new post"});
+
+        // restituisce il post appena creato se viene creato 
+        db.query(sqlQueryAddedPost, [title], (err, results) => {
+            res.status(201).json({
+                message: "Post created successfully",
+                post: results
+            });
+        }); 
+    });
 }
 
 function update(req, res) {
